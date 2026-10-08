@@ -1,0 +1,77 @@
+[
+  {
+    "question": "What is the name for an intense fear of Halloween?",
+    "options": ["Phasmophobia", "Arachnophobia", "Necrophobia", "Samhainophobia"],
+    "answer": 3
+  },
+  {
+    "question": "What was candy corn originally marketed as?",
+    "options": ["Harvest Kernels", "Witch Teeth", "Chicken Feed", "Pumpkin Bits"],
+    "answer": 2
+  },
+  {
+    "question": "Michael Myers' mask in Halloween (1978) was a modified mask of which character?",
+    "options": ["Spock", "The Wolf Man", "Frankenstein's monster", "Captain Kirk"],
+    "answer": 3
+  },
+  {
+    "question": "Samhain traditionally marked the end of what?",
+    "options": ["The harvest season", "The spring planting", "The new moon cycle", "The school year"],
+    "answer": 0
+  },
+  {
+    "question": "Which famous escape artist died on Halloween in 1926?",
+    "options": ["Harry Houdini", "David Blaine", "Harry Blackstone", "Howard Thurston"],
+    "answer": 0
+  },
+  {
+    "question": "Which of these movies won the Oscar for Best Picture?",
+    "options": ["Get Out", "The Exorcist", "Jaws", "Silence of the Lambs"],
+    "answer": 3
+  },
+  {
+    "question": "Bram Stoker is best known for writing which novel?",
+    "options": ["Dracula", "The Phantom of the Opera", "Carmilla", "The Invisible Man"],
+    "answer": 0
+  },
+  {
+    "question": "Taking Instagram and the internet by storm, who or what did famed child actor Macaulay Culkin dress as for Halloween last year in 2024?",
+    "options": ["Joe Burrow", "Kid Rock", "Blake Ewing", "His brother"],
+    "answer": 0
+  },
+  {
+    "question": "Before pumpkins, what did people in Ireland carve into jack-o'-lanterns?",
+    "options": ["Apples", "Melons", "Potatoes", "Turnips"],
+    "answer": 3
+  },
+  {
+    "question": "How many Sanderson sisters are there in Hocus Pocus?",
+    "options": ["Five", "Two", "Four", "Three"],
+    "answer": 3
+  },
+  {
+    "question": "Día de los Muertos is most closely associated with which country?",
+    "options": ["Brazil", "Mexico", "Peru", "Spain"],
+    "answer": 1
+  },
+  {
+    "question": "Throughout the entire series of the sitcom FRIENDS, only one official Halloween episode was ever aired - The One With The Halloween Party. In that episode, what costume does Joey Tribbiani dress as for the Halloween party?",
+    "options": ["A Roman gladiator", "Superman", "The holiday armadillo", "Chandler Bing"],
+    "answer": 3
+  },
+  {
+    "question": "Halloween grew out of Samhain, a festival from which ancient culture?",
+    "options": ["Roman", "Viking", "Celtic", "Egyptian"],
+    "answer": 2
+  },
+  {
+    "question": "A teal pumpkin on a doorstep signals the house offers what?",
+    "options": ["A haunted house tour", "Non-food treats for kids with allergies", "Full-size candy bars", "Free hot cider"],
+    "answer": 1
+  },
+  {
+    "question": "Who wrote the 1818 novel Frankenstein?",
+    "options": ["Mary Shelley", "Bram Stoker", "Robert Louis Stevenson", "Edgar Allan Poe"],
+    "answer": 0
+  }
+]

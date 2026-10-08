@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haunted Trivia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="join" class="screen" style="max-width: 420px">
+    <h1 class="spooky">Haunted Trivia</h1>
+    <form id="join-form" class="panel" style="display: flex; flex-direction: column; gap: 12px">
+      <input class="field" id="pin" inputmode="numeric" maxlength="6" placeholder="Game PIN" autocomplete="off">
+      <input class="field" id="name" maxlength="16" placeholder="Nickname" autocomplete="off">
+      <button class="btn" type="submit">Enter… if you dare</button>
+    </form>
+    <p class="error" id="join-error"></p>
+    <p class="muted"><a href="host.html" style="color: var(--muted)">Hosting a game? Open the host screen</a></p>
+  </section>
+
+  <section id="wait" class="screen">
+    <div class="big-emoji" id="wait-emoji">🎃</div>
+    <h2 id="wait-title"></h2>
+    <p class="muted" id="wait-sub"></p>
+  </section>
+
+  <section id="answer" class="screen" style="flex: 1">
+    <div class="counter" id="answer-meta"></div>
+    <div class="pad" id="pad"></div>
+  </section>
+
+  <script src="common.js"></script>
+  <script>
+    let session = JSON.parse(sessionStorage.getItem("player") || "null");
+    const params = new URLSearchParams(location.search);
+    if (params.get("pin")) $("pin").value = params.get("pin");
+
+    $("join-form").onsubmit = async (e) => {
+      e.preventDefault();
+      $("join-error").textContent = "";
+      try {
+        session = await api("/api/join", { pin: $("pin").value, name: $("name").value });
+        sessionStorage.setItem("player", JSON.stringify(session));
+        poll();
+      } catch (err) { $("join-error").textContent = err.message; }
+    };
+
+    function wait(emoji, title, sub) {
+      show("wait");
+      $("wait-emoji").textContent = emoji;
+      $("wait-title").textContent = title;
+      $("wait-sub").textContent = sub || "";
+    }
+
+    let padFor = -1;
+    function render(s) {
+      const standing = `${s.score} pts · #${s.rank} of ${s.playerCount}`;
+      if (s.phase === "lobby") return wait("🕸️", `You're in, ${s.name}!`, "See your name on screen? Waiting for the host to start…");
+
+      if (s.phase === "question") {
+        if (s.answered) return wait("🔮", "Answer locked in!", "Waiting for the others…");
+        show("answer");
+        $("answer-meta").textContent = `Question ${s.index + 1} of ${s.total} · ${standing}`;
+        if (padFor !== s.index) {
+          padFor = s.index;
+          $("pad").replaceChildren(...Array.from({ length: s.options }, (_, i) => {
+            const b = el("button", `a${i}`, ICONS[i]);
+            b.setAttribute("aria-label", `Answer ${i + 1}`);
+            b.onclick = () => submit(i);
+            return b;
+          }));
+        }
+        return;
+      }
+
+      if (s.phase === "reveal") {
+        const r = s.result;
+        if (!r.answered) return wait("⌛", "Time's up!", `No answer this round. ${standing}`);
+        if (r.correct) return wait("🎉", `Correct! +${r.points}`, standing);
+        return wait("💀", "Wrong!", standing);
+      }
+
+      if (s.phase === "leaderboard") return wait("🦇", `You're #${s.rank}`, `${s.score} points. Eyes on the big screen!`);
+
+      const medal = ["🥇", "🥈", "🥉"][s.rank - 1] || "👻";
+      sessionStorage.removeItem("player");
+      return wait(medal, `Game over! You finished #${s.rank}`, `${s.score} points. Happy Halloween!`);
+    }
+
+    async function submit(choice) {
+      try { await api("/api/answer", { ...session, choice }); } catch (e) { /* the next poll shows the real state */ }
+      poll();
+    }
+
+    let timer;
+    async function poll() {
+      clearTimeout(timer);
+      let s;
+      try {
+        s = await api(`/api/state?pin=${session.pin}&playerId=${session.playerId}`);
+      } catch (e) {
+        sessionStorage.removeItem("player");
+        session = null;
+        show("join");
+        $("join-error").textContent = e.message;
+        return;
+      }
+      render(s);
+      if (s.phase !== "end") timer = setTimeout(poll, 700);
+    }
+
+    if (session) poll(); else show("join");
+  </script>
+</body>
+</html>

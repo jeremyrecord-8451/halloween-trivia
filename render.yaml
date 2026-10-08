@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: haunted-trivia
+    runtime: python
+    plan: free
+    buildCommand: "echo no dependencies to install"
+    startCommand: "python server.py"

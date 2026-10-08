@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haunted Trivia – Host</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="start" class="screen">
+    <h1 class="spooky">Haunted Trivia</h1>
+    <p class="muted">Put this screen where everyone can see it. Players join on their phones.</p>
+    <button class="btn" id="create">Summon a new game</button>
+    <p class="error" id="start-error"></p>
+  </section>
+
+  <section id="lobby" class="screen hidden">
+    <div class="panel">
+      <div class="muted">Join at <strong id="join-url"></strong> with Game PIN:</div>
+      <div class="pin" id="pin"></div>
+    </div>
+    <div class="counter"><span id="player-count">0</span> brave souls have joined</div>
+    <div class="players" id="players"></div>
+    <button class="btn" id="begin" disabled>Start the game</button>
+    <p class="error" id="lobby-error"></p>
+  </section>
+
+  <section id="question" class="screen hidden">
+    <div class="q-meta">
+      <div class="counter" id="q-number"></div>
+      <div class="timer" id="timer"></div>
+      <div class="counter"><span id="answered">0</span> answers</div>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <button class="btn" id="advance"></button>
+  </section>
+
+  <section id="leaderboard" class="screen hidden">
+    <h1 class="spooky" id="board-title">Scoreboard</h1>
+    <div class="board" id="board"></div>
+    <button class="btn" id="board-next">Next question</button>
+  </section>
+
+  <script src="common.js"></script>
+  <script>
+    let pin = sessionStorage.getItem("host-pin");
+    let hostKey = sessionStorage.getItem("host-key");
+    let busy = false;
+
+    $("create").onclick = async () => {
+      try {
+        const g = await api("/api/create", {});
+        pin = g.pin; hostKey = g.hostKey;
+        sessionStorage.setItem("host-pin", pin);
+        sessionStorage.setItem("host-key", hostKey);
+        poll();
+      } catch (e) { $("start-error").textContent = e.message; }
+    };
+
+    async function next() {
+      if (busy) return;
+      busy = true;
+      try { await api("/api/next", { pin, hostKey }); await poll(); }
+      catch (e) { $("lobby-error").textContent = e.message; }
+      finally { busy = false; }
+    }
+    $("begin").onclick = next;
+    $("advance").onclick = next;
+    $("board-next").onclick = next;
+
+    let lastKey = "";
+    function render(s) {
+      if (s.phase === "lobby") {
+        show("lobby");
+        $("pin").textContent = s.pin;
+        $("join-url").textContent = s.joinUrl;
+        $("player-count").textContent = s.players.length;
+        $("begin").disabled = s.players.length === 0;
+        const box = $("players");
+        if (box.children.length !== s.players.length) {
+          box.replaceChildren(...s.players.map((n) => el("div", "chip", n)));
+        }
+        return;
+      }
+
+      if (s.phase === "question" || s.phase === "reveal") {
+        show("question");
+        const key = s.index + s.phase;
+        if (key !== lastKey) {
+          lastKey = key;
+          $("q-number").textContent = `Question ${s.index + 1} of ${s.total}`;
+          $("q-text").textContent = s.question.text;
+          $("options").replaceChildren(...s.question.options.map((text, i) => {
+            const o = el("div", `option a${i}`);
+            o.append(el("span", "icon", ICONS[i]), el("span", "", text));
+            if (s.phase === "reveal") {
+              o.append(el("span", "count", s.counts[i]));
+              o.classList.add(i === s.correct ? "right" : "dim");
+            }
+            return o;
+          }));
+          $("advance").textContent = s.phase === "question" ? "Skip timer" : "Show scoreboard";
+        }
+        $("timer").textContent = Math.ceil(s.remaining);
+        $("answered").textContent = s.answered;
+        return;
+      }
+
+      show("leaderboard");
+      const final = s.phase === "end";
+      $("board-title").textContent = final ? "🏆 Final Results 🏆" : "Scoreboard";
+      $("board-next").classList.toggle("hidden", final);
+      $("board-next").textContent = s.index + 1 >= s.total ? "Reveal the winner" : "Next question";
+      $("board").replaceChildren(...s.leaderboard.map((p, i) => {
+        const row = el("div", "row");
+        row.append(el("span", "", `${i + 1}. ${p.name}`), el("span", "", p.score));
+        return row;
+      }));
+      if (final) sessionStorage.removeItem("host-key");
+    }
+
+    let timer;
+    async function poll() {
+      clearTimeout(timer);
+      try {
+        render(await api(`/api/state?pin=${pin}&hostKey=${hostKey}`));
+      } catch (e) {
+        sessionStorage.clear();
+        pin = hostKey = null;
+        show("start");
+        return;
+      }
+      timer = setTimeout(poll, 500);
+    }
+
+    if (pin && hostKey) poll(); else show("start");
+  </script>
+</body>
+</html>
